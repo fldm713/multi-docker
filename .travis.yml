@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install: 
+  - docker build -t fldm713/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true fldm713/react-test npm test
+
+after_success: 
+  - docker build -t fldm713/multi-client ./client
+  - docker build -t fldm713/multi-nginx ./nginx
+  - docker build -t fldm713/multi-server ./server
+  - docker build -t fldm713/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push these images to docker hub
+  - docker push fldm713/multi-client
+  - docker push fldm713/multi-nginx
+  - docker push fldm713/multi-server
+  - docker push fldm713/multi-worker
